@@ -91,6 +91,30 @@ methods for making a move and promoting a pawn. This class (not an instance) can
 then be passed into the `Game` constructor to start a game. See the
 [API Documentation][docs] for more information.
 
+Here is an example:
+
+```python
+"""
+Plays a game between a human and a bot (that I wrote).
+"""
+
+from alicechess import Game, HumanPlayer, Player, PromoteType
+
+class Bot(Player):
+    """A very good bot that I wrote."""
+
+    def make_move(self, game_state):
+        for piece in game_state.yield_player_pieces():
+            for move in piece.yield_moves():
+                return move
+
+    def promote(self, game_state):
+        return PromoteType.QUEEN
+
+if __name__ == "__main__":
+    Game(white=HumanPlayer, black=Bot).start_window()
+```
+
 [docs]: https://github.com/josephlou5/alicechess/blob/main/Documentation.md
 
 ## Credit
