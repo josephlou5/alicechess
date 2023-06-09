@@ -66,6 +66,8 @@ class GameState:  # pylint: disable=too-many-public-methods
             Returns a string representation of the board.
         moves_to_str(columns=4, captured_empty=True) -> str
             Returns a string representation of the moves for each piece.
+        debug()
+            Prints debug information about this game state.
 
         is_game_over() -> bool
             Returns whether the game is over (checkmate, stalemate, or
@@ -334,18 +336,6 @@ class GameState:  # pylint: disable=too-many-public-methods
                 self._end_game_state = EndGameState.STALEMATE
         else:
             self._end_game_state = None
-
-    def debug(self):
-        print("=" * 50)
-        print(self.fen())
-        print(self.board_to_str())
-        if self.is_game_over():
-            print("end game state:", self._end_game_state)
-            if self.is_in_checkmate():
-                print("winner:", self.winner())
-        else:
-            print(self.moves_to_str())
-            print("in check:", self.is_in_check())
 
     @classmethod
     def new(cls, *, white: Type[AnyPlayer], black: Type[AnyPlayer]) -> Self:
@@ -735,6 +725,37 @@ class GameState:  # pylint: disable=too-many-public-methods
             # use zip longest because the last column may be shorter
             for row in zip_longest(*cols, fillvalue="")
         )
+
+    def debug(self):
+        """Prints debug information about this game state."""
+        game = self
+        print(game.fen())
+        print(game.board_to_str())
+        if game.num_captured() > 0:
+            names_counter = Counter(
+                piece.name for piece in game.yield_captured()
+            )
+            # sort by count, then by piece name
+            by_count = sorted(
+                names_counter.items(), key=lambda p: (p[1], p[0])
+            )
+            captured_pieces = []
+            for num, name in by_count:
+                if num == 1:
+                    captured_pieces.append(name)
+                else:
+                    captured_pieces.append(f"{name}({num})")
+            print("Captured pieces:", " ".join(captured_pieces))
+        if game.is_game_over():
+            print("End game state:", game.end_game_state)
+            if game.is_in_checkmate():
+                print("Winner:", game.winner())
+        else:
+            print(game.moves_to_str())
+            print("Current player:", game.current_color.title())
+            print("In check:", game.is_in_check())
+            if game.needs_promotion():
+                print("Waiting for promotion")
 
     def is_game_over(self) -> bool:
         """Returns whether the game is over (checkmate, stalemate, or

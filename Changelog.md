@@ -1,5 +1,10 @@
 # Changelog
 
+## v2.3.0
+
+- Improved debug printing for windowed games (and added ability to toggle debug)
+- Added keyboard actions to the window
+
 ## v2.2.0
 
 _2023-06-09 14:22_

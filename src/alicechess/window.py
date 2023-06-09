@@ -208,21 +208,31 @@ class Window:
 
     Methods:
         run(): Runs the game.
+
+    Keyboard Actions:
+        'q': Quit the game (press twice within 3 seconds).
+        'p': Print debug information.
+        'd': Toggle debug.
+        '+': Increase the non-human player delay by 1 second.
+        '-': Decrease the non-human player delay by 1 second.
+        Space: Pause/unpause the game (for games with no human players).
     """
+
+    TITLE = "Alice Chess"
 
     def __init__(
         self,
         game_state: GameState,
-        title: str = "Alice Chess",
         non_human_player_delay: int = 3,
+        debug: bool = False,
     ):
         """Initializes a Window.
 
         Args:
             game_state (GameState): The starting game state.
-            title (str): The title of the window.
             non_human_player_delay (int): The number of seconds of delay
                 for non-human players to simulate realism.
+            debug (bool): Whether to print debug information.
 
         Raises:
             ValueError:
@@ -239,6 +249,9 @@ class Window:
         if non_human_player_delay < 0:
             raise ValueError("`non_human_player_delay` cannot be negative")
         self._delay = non_human_player_delay * 1000
+
+        self._debug = debug
+        self._confirm_quit = False
 
         self._game = game_state
         white = game_state.white
@@ -262,7 +275,7 @@ class Window:
                 return num, letter
 
         self._tk = _tk.Tk()
-        self._tk.title(title)
+        self._tk.title(self.TITLE)
 
         # find font to use
         self._font = None
@@ -281,7 +294,9 @@ class Window:
         canvas.pack()
 
         # title
-        canvas.create_text(HALF_WIDTH, Y_OFFSET / 2, text=title, font=font30)
+        canvas.create_text(
+            HALF_WIDTH, Y_OFFSET / 2, text=self.TITLE, font=font30
+        )
 
         # piece images
         # 5:4 scale for image:square sizes
@@ -406,6 +421,18 @@ class Window:
         self._selected = None
         self._other_player_callback = None
 
+    def _print(self, *args, **kwargs):
+        """Prints something for debugging."""
+        if not self._debug:
+            return
+        print(*args, **kwargs)
+
+    def _print_current_game(self):
+        print("=" * 50)
+        print("Current game:")
+        self._game.debug()
+        print("=" * 50)
+
     def _show(self, element, **kwargs):
         self._canvas.itemconfig(element, **kwargs, state="normal")
 
@@ -421,6 +448,8 @@ class Window:
 
     def _reset(self):
         """Resets the window."""
+
+        self._print("Resetting game")
 
         # stop any non-human player from thinking
         self._stop_non_human_player()
@@ -492,7 +521,7 @@ class Window:
         self._selected = None
 
     def _select_piece(self, piece: Piece):
-        print("selected piece:", piece)
+        self._print("Selected piece:", piece, "at", piece.pos.debug())
         self._unselect_piece()
         self._selected = piece
         self._squares[self._selected.pos].select()
@@ -562,7 +591,7 @@ class Window:
             if not 0 <= i < 4:
                 return
             promote_type = PromoteType.by_index(i)
-            print("promoting pawn to:", promote_type)
+            self._print("Promoting pawn to:", promote_type)
             self._game = self._game.promote(promote_type)
             self._hide("promotions")
             self._end_turn()
@@ -585,8 +614,6 @@ class Window:
                 return
             if piece.color is not self._game.current_color:
                 return
-            print("=" * 15)
-            print("clicked:", clicked_pos, clicked_pos.pos)
             self._select_piece(piece)
             return
 
@@ -596,8 +623,6 @@ class Window:
                 # clicked same piece; unselect it
                 self._unselect_piece()
             else:
-                print("=" * 15)
-                print("clicked:", clicked_pos, clicked_pos.pos)
                 self._select_piece(piece)
             return
 
@@ -606,8 +631,7 @@ class Window:
             return
 
         # make move
-        print("=" * 15)
-        print("moving selected to:", clicked_pos, clicked_pos.pos)
+        self._print("Moving selected to:", clicked_pos.debug())
         try:
             _, r, c = clicked_pos
             move = (self._selected.pos, (r, c))
@@ -640,6 +664,9 @@ class Window:
         self._end_turn()
 
     def _pause_unpause(self):
+        if self._has_human_player:
+            # do nothing
+            return
         if self._game.is_game_over():
             # do nothing
             return
@@ -684,7 +711,7 @@ class Window:
 
         def make_turn():
             self._game = self._game.step()
-            print("non-human player made move:", self._game.move)
+            self._print("Non-human player made move:", self._game.move)
             self._other_player_callback = None
             self._end_turn()
 
@@ -725,9 +752,11 @@ class Window:
             self._squares[last_pos].last_move()
             self._last_move = last_pos
 
-        game = self._game
-        game.debug()
+        if self._debug:
+            self._print_current_game()
+
         # check for game over
+        game = self._game
         if game.is_game_over():
             # no more pause
             self._hide("pause")
@@ -750,12 +779,61 @@ class Window:
         # initialize next turn
         self._non_human_turn()
 
+    def _key_pressed(self, event):
+        char = event.char.lower()
+
+        if char == "q":
+            if not self._confirm_quit:
+                # ask for confirmation
+                CONFIRM_SECONDS = 3
+
+                print(f"Press 'q' again in {CONFIRM_SECONDS} seconds to quit")
+                self._confirm_quit = True
+
+                def _cancel_quit():
+                    self._confirm_quit = False
+
+                self._tk.after(CONFIRM_SECONDS * 1000, _cancel_quit)
+            else:
+                # quit the game
+                self._tk.destroy()
+
+        elif char == "p":
+            # print debug information
+            self._print_current_game()
+
+        elif char == "d":
+            # toggle debug
+            self._debug = not self._debug
+            print("Debug toggled to:", self._debug)
+            if self._debug:
+                self._print_current_game()
+
+        elif char == " ":
+            # pause / unpause the game
+            self._pause_unpause()
+
+        elif char in ("+", "="):
+            # increase the delay
+            self._delay += 1000
+
+        elif char == "-":
+            # decrease the delay
+            if self._delay - 1000 <= 0:
+                # don't do anything
+                pass
+            else:
+                self._delay -= 1000
+
     def run(self):
         """Runs the game."""
         self._reset()
 
         # bind clicks
         self._canvas.bind_all("<Button-1>", self._click)
+
+        # bind keyboard presses
+        self._canvas.bind_all("<Key>", self._key_pressed)
 
         # initialize a non-human turn, if possible
         # if no human players, this will keep going forever until the

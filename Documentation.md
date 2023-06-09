@@ -70,28 +70,32 @@ Wrapper around [`GameState`][] to easily start a game.
 
   _Returns_ [`GameState`][]: The first state of the game.
 
-**Example**
+- `start_window(non_human_player_delay: int = None, debug: bool = None)`
+
+  Starts the game in a window.
+
+  _Arguments:_
+
+  | Name                     | Type   | Description                                                               |
+  | ------------------------ | ------ | ------------------------------------------------------------------------- |
+  | `non_human_player_delay` | `int`  | The number of seconds of delay for non-human players to simulate realism. |
+  | `debug`                  | `bool` | Whether to print debug information.                                       |
+
+**Examples**
 
 ```python
 from alicechess import Game, HumanPlayer
 
 game = Game(white=HumanPlayer, black=SuperGoodBotPlayer)
-game.start().run()
+game.new().run()
 ```
 
-## `WindowGame`
+```python
+from alicechess import Game, HumanPlayer
 
-_Subclass of [`Game`][]._
-
-Represents a game of Alice Chess in a visual window.
-
-**Methods**
-
-- `start_window(**kwargs)`
-
-  Starts the game in a window.
-
-  Any keyword arguments will be passed to the [`Window`][] constructor.
+game = Game(white=HumanPlayer, black=SuperGoodBotPlayer)
+game.start_window()
+```
 
 ## `GameState`
 
@@ -169,6 +173,10 @@ the end game state, and more.
   - `ValueError`: If `columns` is not positive.
 
   _Returns_ `str`: The string representation.
+
+- `debug()`
+
+  Prints debug information about this game state.
 
 - `is_game_over() -> bool`
 
@@ -466,6 +474,12 @@ Represents a position on a single board.
 
   Returns the `Position`s in the given iterable as a string.
 
+**Methods**
+
+- `debug() -> str`
+
+  Returns a string representation for debugging.
+
 #### `BoardPosition`
 
 Represents a position on either board.
@@ -499,6 +513,12 @@ Represents a position on either board.
 - `to_str(iterable: Iterable[BoardPosition], sep: str = " ") -> str`
 
   Returns the `BoardPosition`s in the given iterable as a string.
+
+**Methods**
+
+- `debug() -> str`
+
+  Returns a string representation for debugging.
 
 ### Moves
 
@@ -682,12 +702,11 @@ Enum for the possible states for the end of the game.
 
 A `HumanPlayer` is a [`Player`][] that does not implement the `make_move()` and
 `promote()` methods, and instead relies on other means of input to make moves in
-the game. For instance, `HumanPlayer`s in a [`WindowGame`][] will use click
-events to select pieces and move them.
+the game. For instance, `HumanPlayer`s in a windowed game (see [`Game`][]) will
+use click events to select pieces and move them.
 
 You will only need to use this if you want a human to play in a game by passing
-`HumanPlayer` as the `white` or `black` player to a [`Game`][] or
-[`WindowGame`][].
+`HumanPlayer` as the `white` or `black` player to a [`Game`][].
 
 ### `Window`
 
@@ -701,7 +720,7 @@ Windows systems.
 
 **Constructors**
 
-- `Window(game_state: GameState, title: str = "Alice Chess", non_human_player_delay: int = 3)`
+- `Window(game_state: GameState, non_human_player_delay: int = 3, debug: bool = False)`
 
   Initializes a Window.
 
@@ -710,14 +729,25 @@ Windows systems.
   | Name                     | Type            | Description                                                               |
   | ------------------------ | --------------- | ------------------------------------------------------------------------- |
   | `game_state`             | [`GameState`][] | The starting game state.                                                  |
-  | `title`                  | `str`           | The title of the window.                                                  |
   | `non_human_player_delay` | `int`           | The number of seconds of delay for non-human players to simulate realism. |
+  | `debug`                  | `bool`          | Whether to print debug information.                                       |
 
 **Methods**
 
 - `run()`
 
   Runs the game.
+
+**Keyboard Actions**
+
+| Key   | Action                                                    |
+| ----- | --------------------------------------------------------- |
+| `q`   | Quit the game (press twice within 3 seconds).             |
+| `p`   | Print debug information.                                  |
+| `d`   | Toggle debug.                                             |
+| `+`   | Increase the non-human player delay by 1 second.          |
+| `-`   | Decrease the non-human player delay by 1 second.          |
+| Space | Pause/unpause the game (for games with no human players). |
 
 <!-- External reference links -->
 
@@ -731,10 +761,8 @@ Windows systems.
 [`EndGameState`]: #endgamestate
 [`Game`]: #game
 [`GameState`]: #gamestate
-[`HumanPlayer`]: #humanplayer
 [`King`]: #king
 [`Move`]: #move
-[`MovesCalculator`]: #movescalculator
 [`Pawn`]: #pawn
 [`Piece`]: #piece
 [`PieceMove`]: #piecemove
@@ -743,5 +771,3 @@ Windows systems.
 [`Player`]: #player
 [`Position`]: #position
 [`PromoteType`]: #promotetype
-[`Window`]: #window
-[`WindowGame`]: #windowgame

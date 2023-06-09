@@ -45,17 +45,26 @@ class Game:
         """Returns a new game."""
         return GameState.new(white=self._white, black=self._black)
 
-    def start_window(self, **kwargs):
+    def start_window(
+        self, non_human_player_delay: int = None, debug: bool = None
+    ):
         """Starts the game in a window.
 
-        Any keyword arguments will be passed to the `Window`
-        constructor.
+        Args:
+            non_human_player_delay (int): The number of seconds of delay
+                for non-human players to simulate realism.
+            debug (bool): Whether to print debug information.
         """
         # import here so that games that don't use the window don't need
         # to be run in a virtual environment (requires Pillow)
         # pylint: disable=import-outside-toplevel
         from alicechess.window import Window
 
+        kwargs = {}
+        if non_human_player_delay is not None:
+            kwargs["non_human_player_delay"] = non_human_player_delay
+        if debug is not None:
+            kwargs["debug"] = debug
         game_state = self.new()
         window = Window(game_state, **kwargs)
         window.run()

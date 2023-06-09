@@ -146,6 +146,10 @@ class PositionBase(_ImmutableParts):
         """The position code (in algebraic notation)."""
         return self._code
 
+    def debug(self) -> str:
+        """Returns a string representation for debugging."""
+        return f"{self._code} {self._pos}"
+
 
 class Position(PositionBase):
     """Represents a position on a single board.
