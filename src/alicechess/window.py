@@ -52,8 +52,8 @@ WIDTH = X_OFFSET + SQUARE_SIZE * 8 + BOARD_PADDING + SQUARE_SIZE * 8 + X_OFFSET
 HALF_WIDTH = WIDTH / 2
 HEIGHT = Y_OFFSET + SQUARE_SIZE * 8 + Y_OFFSET_BOT
 
-RESET_BUTTON_COORDS = (10, 10, 70, 40)
-UNDO_BUTTON_COORDS = (WIDTH - 70, 10, WIDTH - 10, 40)
+BUTTON_PADDING = 5
+
 POSSIBLE_DOT_RADIUS = 5
 
 # Board colors
@@ -69,6 +69,18 @@ FONTS = ("SF Pro",)
 # Images
 PICTURE_FOLDER = Path(__file__).parent / "pictures"
 PICTURE_EXT = ".png"
+
+# =============================================================================
+
+
+def _button_width(font: _TkFont.Font, text: str) -> int:
+    return BUTTON_PADDING + font.measure(text) + BUTTON_PADDING
+
+
+def _button_middle(coords) -> Tuple[float, float]:
+    x1, y1, x2, y2 = coords
+    return (x1 + x2) / 2, (y1 + y2) / 2
+
 
 # =============================================================================
 
@@ -261,7 +273,7 @@ class Window:
                 break
         font30 = (self._font, 30)
         font20 = (self._font, 20)
-        font15 = (self._font, 15)
+        self._font15 = _TkFont.Font(self._tk, (self._font, 15))
 
         self._canvas = canvas = _tk.Canvas(
             self._tk, width=WIDTH, height=HEIGHT
@@ -347,24 +359,47 @@ class Window:
             HALF_WIDTH, bottom_y, font=font20
         )
 
+        def _create_button(coords, text, **kwargs):
+            tags_kwargs = {}
+            if "tags" in kwargs:
+                tags_kwargs["tags"] = kwargs["tags"]
+            button_id = canvas.create_rectangle(*coords, **tags_kwargs)
+            text_id = canvas.create_text(
+                *_button_middle(coords), text=text, **kwargs
+            )
+            return button_id, text_id
+
         # reset button
-        canvas.create_rectangle(*RESET_BUTTON_COORDS)
-        x1, y1, x2, y2 = RESET_BUTTON_COORDS
-        canvas.create_text(
-            (x1 + x2) / 2, (y1 + y2) / 2, text="Reset", font=font15
+        self._reset_button_coords = (
+            10,
+            10,
+            10 + _button_width(self._font15, "Reset"),
+            40,
         )
+        _create_button(self._reset_button_coords, "Reset")
 
         # undo button
-        canvas.create_rectangle(*UNDO_BUTTON_COORDS, tags=("undo",))
-        x1, y1, x2, y2 = UNDO_BUTTON_COORDS
-        canvas.create_text(
-            (x1 + x2) / 2,
-            (y1 + y2) / 2,
-            text="Undo",
-            font=font15,
-            tags=("undo",),
+        self._undo_button_coords = (
+            WIDTH - (10 + _button_width(self._font15, "Undo")),
+            10,
+            WIDTH - 10,
+            40,
         )
+        _create_button(self._undo_button_coords, "Undo", tags=("undo",))
         self._hide("undo")
+
+        # pause button
+        self._pause_button_coords = (
+            WIDTH - (10 + _button_width(self._font15, "Pause")),
+            10,
+            WIDTH - 10,
+            40,
+        )
+        self._pause_button, self._pause_text = _create_button(
+            self._pause_button_coords, "Pause", tags=("pause",)
+        )
+        self._hide("pause")
+        self._paused = False
 
         # for manually playing with human players
         self._last_move = None
@@ -403,6 +438,11 @@ class Window:
         self._hide("undo")
         self._hide("promotions")
         self._hide(self._state_text)
+
+        if self._has_human_player:
+            self._hide("pause")
+        else:
+            self._show("pause")
 
         # update piece images
         self._update_pieces()
@@ -486,18 +526,22 @@ class Window:
         x, y = event.x, event.y
 
         # check reset button
-        if _within_coords(RESET_BUTTON_COORDS, x, y):
+        if _within_coords(self._reset_button_coords, x, y):
             self._reset()
             # initialize a non-human turn, if possible
             self._non_human_turn(True)
             return
 
         if not self._has_human_player:
-            # no other clicks to check for
+            # check pause button
+            if _within_coords(self._pause_button_coords, x, y):
+                self._pause_unpause()
+
+            # nothing else to check
             return
 
         # check undo button
-        if _within_coords(UNDO_BUTTON_COORDS, x, y):
+        if _within_coords(self._undo_button_coords, x, y):
             if self._undo_state is not None:
                 self._stop_non_human_player()
                 self._game = self._undo_state
@@ -595,8 +639,47 @@ class Window:
 
         self._end_turn()
 
+    def _pause_unpause(self):
+        if self._game.is_game_over():
+            # do nothing
+            return
+
+        if self._paused:
+            # unpause
+            button_text = "Pause"
+            # initialize a non-human turn
+            self._non_human_turn()
+        else:
+            # pause
+            button_text = "Unpause"
+            # stop the current turn
+            self._stop_non_human_player()
+            # update the state text
+            if self._game.is_in_check():
+                state_text = f"{self._game.current_color.title()} is in check."
+                self._canvas.itemconfig(self._state_text, text=state_text)
+            else:
+                self._hide(self._state_text)
+
+        # update button text
+        self._pause_button_coords = (
+            WIDTH - (10 + _button_width(self._font15, button_text)),
+            10,
+            WIDTH - 10,
+            40,
+        )
+        self._canvas.coords(self._pause_button, self._pause_button_coords)
+        self._canvas.coords(
+            self._pause_text, _button_middle(self._pause_button_coords)
+        )
+        self._canvas.itemconfig(self._pause_text, text=button_text)
+
+        self._paused = not self._paused
+
     def _non_human_turn(self, first_move: bool = False):
         if self._game.current_player.is_human:
+            return
+        if self._game.is_game_over():
             return
 
         def make_turn():
@@ -646,8 +729,8 @@ class Window:
         game.debug()
         # check for game over
         if game.is_game_over():
-            # no more undo
-            # self._hide("undo")
+            # no more pause
+            self._hide("pause")
             if game.is_in_checkmate():
                 text = f"Checkmate. {game.winner().title()} won!"
             elif game.is_in_stalemate():

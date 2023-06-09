@@ -1,8 +1,10 @@
 # Changelog
 
-## v2.0.1
+## v2.1.0
 
 - Update `of()` function to use any iterable
+- Add "Pause" button for window games with no human players
+- Make window buttons have the proper width for the used font
 
 ## v2.0.0
 
