@@ -71,8 +71,13 @@ class _ImmutableParts:
             return None
         if isinstance(obj, cls):
             return obj
-        if isinstance(obj, (tuple, list)):
-            return cls(*obj)
+        try:
+            args = tuple(obj)
+        except TypeError:
+            pass
+        else:
+            # if iterable, use it as args
+            return cls(*args)
         raise TypeError(
             f"Cannot create {cls.__name__} from {obj.__class__.__name__}"
         )

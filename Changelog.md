@@ -1,5 +1,9 @@
 # Changelog
 
+## v2.0.1
+
+- Update `of()` function to use any iterable
+
 ## v2.0.0
 
 _2023-06-08 21:42_
