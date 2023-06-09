@@ -18,6 +18,10 @@ Here is a [description of the concept and rules][rules].
 
 Notable game rules:
 
+- A piece's move must be valid on the board it is on, which means that a piece
+  on Board B can block a check on Board A after teleporting (since the move was
+  valid on Board B, and the move overall was legal because the king is not
+  staying in check). See the above link for a more detailed argument on this.
 - **Castling**: A king and rook may only castle if neither has moved already,
   the king is not in check, the squares they will move to are vacant on both
   boards, and the king does not move through check (on Board A) or into check.

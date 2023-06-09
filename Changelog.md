@@ -8,6 +8,12 @@
   - According to the linked rules (should have read it thoroughly!), there were
     some potentially incorrect moves (either missing or unnecessarily present)
     that could have been generated.
+- Tweaked possible move calculations: move must be valid on current board, but
+  not necessarily on both boards
+  - According to the linked rules (should have read it thoroughly!!!), a piece
+    may teleport into a position to block check, since the move was valid on the
+    board it was on (the king was not in check on that board), and the move is
+    legal because the king is no longer in check.
 
 ## v2.1.0
 

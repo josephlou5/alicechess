@@ -351,8 +351,12 @@ class MovesCalculator:
             check_pos = here_target_pos
         else:
             check_pos = king.pos
-        if _is_threatened(board, enemy_color, *check_pos):
-            return True
+        if moving_king or pos.bn == king.pos.bn:
+            # if the king is moving, can't move into check
+            # otherwise, if on the same board as the king, can't let the
+            # king be in check
+            if _is_threatened(board, enemy_color, *check_pos):
+                return True
         # make sure move is valid after teleporting
         board[there_target_pos] = board.pop(here_target_pos).move_to(
             there_target_pos
