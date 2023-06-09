@@ -12,11 +12,15 @@ _2023-06-08 21:42_
 
 _2023-06-08 21:15_
 
+**WARNING: Does not work**
+
 - Fixed documentation link in readme
 - Added `__version__.py`
 
 ## v1.0.0
 
 _2023-06-08 21:07_
+
+**WARNING: Does not work**
 
 - Initial release
