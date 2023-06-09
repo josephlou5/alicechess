@@ -104,4 +104,4 @@ Thank you to Artyom Lisitsyn for inspiring me to pursue this project and to
 Trung Phan for being my chess consultant and answering all my questions on rules
 and technicalities.
 
-[docs]: https://github.com/josephlou5/alicechess/Documentation.md
+[docs]: https://github.com/josephlou5/alicechess/blob/main/Documentation.md
