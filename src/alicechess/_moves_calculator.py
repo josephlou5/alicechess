@@ -218,18 +218,19 @@ class MovesCalculator:
                     # right rook: king will move to the right
                     dc = 1
                 valid_castle = True
-                # check that all the spaces in the middle are empty on
-                # both boards
+                # check that the spaces in the middle are empty
                 c = kc + dc
                 while c != rc:
                     if (bn, kr, c) in self._board:
-                        # there's a piece there
+                        # there's a piece there on this board
                         valid_castle = False
                         break
-                    if (1 - bn, kr, c) in self._board:
-                        # there's a piece there on the other board
-                        valid_castle = False
-                        break
+                    if abs(c - kc) <= 2:
+                        # the spaces being landed on must be empty on
+                        # the other board as well
+                        if (1 - bn, kr, c) in self._board:
+                            valid_castle = False
+                            break
                     c += dc
                 if not valid_castle:
                     continue
@@ -271,6 +272,9 @@ class MovesCalculator:
                     continue
                 capture_r = r + pawn.dr
                 capture_pos = (capture_r, pc)
+                if any((bn, *capture_pos) in self._board for bn in range(2)):
+                    # there's a piece there; no en passant
+                    continue
                 if self._move_in_check(
                     pawn.pos, capture_pos, en_passant=(pr, pc)
                 ):

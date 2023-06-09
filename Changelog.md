@@ -4,6 +4,10 @@
 
 - Added command-line parsing to allow launching a game between builtin players
 - Added threefold repetition rule
+- Tweaked castling and en passant abilities
+  - According to the linked rules (should have read it thoroughly!), there were
+    some potentially incorrect moves (either missing or unnecessarily present)
+    that could have been generated.
 
 ## v2.1.0
 

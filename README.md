@@ -19,22 +19,27 @@ Here is a [description of the concept and rules][rules].
 Notable game rules:
 
 - **Castling**: A king and rook may only castle if neither has moved already,
-  the king is not in check, all squares between them are vacant on both boards,
-  and the king does not move through check or into check. After the castle, both
-  pieces will teleport to the other board.
+  the king is not in check, the squares they will move to are vacant on both
+  boards, and the king does not move through check (on Board A) or into check.
+  After the castle, both pieces will teleport to the other board.
 - **En passant**: A pawn may capture another pawn through en passant if your
-  pawn is on board B and the enemy pawn advances two spaces, teleporting to the
-  space right next to yours on board B. (This results in a situation that looks
+  pawn is on Board B and the enemy pawn advances two spaces, teleporting to the
+  space right next to yours on Board B. (This results in a situation that looks
   like regular en passant.) Note that due to teleporting to the other board
   after each move, this can only be achieved by a pawn that _does not_ advance
-  two squares on its first move.
+  two squares on its first move. Also, if there is a piece on Board B where the
+  en passant move would go (i.e., your pawn can already capture a piece
+  normally), then en passant will not take place.
 - **Fifty move rule**: If both players have made 50 moves each where no piece
   has been captured or no pawn moved, then a player may claim a draw. However,
   to simplify this case, the game will be automatically ended with a draw
-  (rather than allowing a player to claim a draw), although this is not the
-  official rule. This therefore overshadows the 75-move rule, where a draw is
-  automatically applied after 75 moves by both players with no captures or pawn
-  movements.
+  (rather than allowing a player to claim a draw). This therefore overshadows
+  the 75-move rule, where a draw is automatically applied after 75 moves by both
+  players with no captures or pawn movements.
+- **Threefold repetition rule**: If a board position appears three times in a
+  game (not necessarily in a row), then a player may claim a draw. However, to
+  simplify this case, the game will be automatically ended with a draw (rather
+  than allowing a player to claim a draw).
 
 ## How to play
 
