@@ -6,7 +6,7 @@ _2023-06-08 21:42_
 
 - Removed test file (wasn't supposed to be published)
 - Added `__all__` tuples to each file
-- Added absolute imports (previous version wasn't event working)
+- Added absolute imports (previous version wasn't even working)
 
 ## v1.0.1
 
