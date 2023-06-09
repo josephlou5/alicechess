@@ -2,6 +2,8 @@
 
 ## v2.2.0
 
+_2023-06-09 14:22_
+
 - Added command-line parsing to allow launching a game between builtin players
 - Added threefold repetition rule
 - Tweaked castling and en passant abilities
