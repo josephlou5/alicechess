@@ -4,8 +4,8 @@ Starts and runs a game in a window between two human players.
 
 # ======================================================================
 
-from game import Game
-from player import HumanPlayer
+from alicechess.game import Game
+from alicechess.player import HumanPlayer
 
 # ======================================================================
 

@@ -6,8 +6,12 @@ Game class.
 
 from typing import Type
 
-from game_state import GameState
-from player import AnyPlayer, _PlayerBase
+from alicechess.game_state import GameState
+from alicechess.player import AnyPlayer, _PlayerBase
+
+# =============================================================================
+
+__all__ = ("Game",)
 
 # =============================================================================
 
@@ -49,7 +53,8 @@ class Game:
         """
         # import here so that games that don't use the window don't need
         # to be run in a virtual environment (requires Pillow)
-        from window import Window  # pylint: disable=import-outside-toplevel
+        # pylint: disable=import-outside-toplevel
+        from alicechess.window import Window
 
         game_state = self.new()
         window = Window(game_state, **kwargs)

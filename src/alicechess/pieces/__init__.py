@@ -6,13 +6,10 @@ Pieces submodule.
 
 import typing as _t
 
-from utils import Color as _Color
-from utils import PieceType as _PieceType
-from utils import PromoteType as _PromoteType
-
-from .king import King
-from .pawn import Pawn
-from .piece import Piece
+from alicechess.pieces.king import King
+from alicechess.pieces.pawn import Pawn
+from alicechess.pieces.piece import Piece
+from alicechess.utils import Color, PieceType, PromoteType
 
 # =============================================================================
 
@@ -40,7 +37,7 @@ def _make_simple_piece(piece_type, rows, columns=None) -> _t.Type[Piece]:
         def _check_start_position(self) -> bool:
             if self._pos.bn != 0:
                 return False
-            if self._color is _Color.WHITE:
+            if self._color is Color.WHITE:
                 row = rows[0]
             else:
                 row = rows[1]
@@ -58,22 +55,22 @@ def _make_simple_piece(piece_type, rows, columns=None) -> _t.Type[Piece]:
 
 
 # queen is always on the left for this particular board setup
-Queen = _make_simple_piece(_PieceType.QUEEN, (7, 0), (3,))
-Rook = _make_simple_piece(_PieceType.ROOK, (7, 0), (0, 7))
-Knight = _make_simple_piece(_PieceType.KNIGHT, (7, 0), (1, 6))
-Bishop = _make_simple_piece(_PieceType.BISHOP, (7, 0), (2, 5))
+Queen = _make_simple_piece(PieceType.QUEEN, (7, 0), (3,))
+Rook = _make_simple_piece(PieceType.ROOK, (7, 0), (0, 7))
+Knight = _make_simple_piece(PieceType.KNIGHT, (7, 0), (1, 6))
+Bishop = _make_simple_piece(PieceType.BISHOP, (7, 0), (2, 5))
 
 # =============================================================================
 
 
 def make_promoted(
-    pawn: Pawn, promote_type: _PromoteType
+    pawn: Pawn, promote_type: PromoteType
 ) -> _t.Union[Queen, Rook, Knight, Bishop]:
     PROMOTE_CLASSES = {
-        _PromoteType.QUEEN: Queen,
-        _PromoteType.ROOK: Rook,
-        _PromoteType.KNIGHT: Knight,
-        _PromoteType.BISHOP: Bishop,
+        PromoteType.QUEEN: Queen,
+        PromoteType.ROOK: Rook,
+        PromoteType.KNIGHT: Knight,
+        PromoteType.BISHOP: Bishop,
     }
     return PROMOTE_CLASSES[promote_type](
         pawn.id, pawn.color, pawn.pos, has_moved=pawn.has_moved

@@ -4,9 +4,8 @@ King piece.
 
 # =============================================================================
 
-from utils import Color, PieceType
-
-from .piece import Piece
+from alicechess.pieces.piece import Piece
+from alicechess.utils import Color, PieceType
 
 # =============================================================================
 

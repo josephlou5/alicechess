@@ -7,7 +7,7 @@ Position, BoardPosition, Move, PieceMove, and PieceMoved classes.
 from functools import total_ordering
 from typing import Iterable, Optional, Self, Tuple
 
-from utils import check_brc
+from alicechess.utils import check_brc
 
 # =============================================================================
 

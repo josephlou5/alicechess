@@ -2,7 +2,7 @@
 
 This project allows you to play Alice Chess, a variant of chess.
 
-## Installastion
+## Installation
 
 The package may be installed through `pip`:
 
@@ -91,17 +91,10 @@ methods for making a move and promoting a pawn. This class (not an instance) can
 then be passed into the `Game` constructor to start a game. See the
 [API Documentation][docs] for more information.
 
-## Advanced Usage
-
-The only dependency for this project is `Pillow` to use the images in the
-interactive window. As such, you could technically clone the repository and run
-it without the window with only the Python builtins. Not sure why you would want
-to do that, but that is another alternative option to installing through `pip`.
+[docs]: https://github.com/josephlou5/alicechess/blob/main/Documentation.md
 
 ## Credit
 
 Thank you to Artyom Lisitsyn for inspiring me to pursue this project and to
 Trung Phan for being my chess consultant and answering all my questions on rules
 and technicalities.
-
-[docs]: https://github.com/josephlou5/alicechess/blob/main/Documentation.md

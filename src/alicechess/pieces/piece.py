@@ -6,8 +6,8 @@ Piece abstract class.
 
 from typing import Iterator, Optional, Set
 
-from position import BoardPosition, PieceMove, Position
-from utils import Color, PieceType, check_brc
+from alicechess.position import BoardPosition, PieceMove, Position
+from alicechess.utils import Color, PieceType, check_brc
 
 # =============================================================================
 

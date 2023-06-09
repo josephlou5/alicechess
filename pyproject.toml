@@ -9,7 +9,7 @@ line_length = 79
 
 [tool.poetry]
 name = "alicechess"
-version = "1.0.1"
+version = "2.0.0"
 description = "A Python package to play Alice Chess"
 authors = ["Joseph Lou <joseph.d.lou@gmail.com>"]
 license = "MIT License"

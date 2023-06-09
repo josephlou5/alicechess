@@ -1,5 +1,13 @@
 # Changelog
 
+## v2.0.0
+
+_2023-06-08 21:42_
+
+- Removed test file (wasn't supposed to be published)
+- Added `__all__` tuples to each file
+- Added absolute imports (previous version wasn't event working)
+
 ## v1.0.1
 
 _2023-06-08 21:15_

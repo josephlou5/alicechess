@@ -7,9 +7,9 @@ MovesCalculator class.
 from functools import partial
 from typing import Dict, Iterator, List, Optional, Sequence, Tuple
 
-from pieces import King, Pawn, Piece, Rook
-from position import BoardPosition, Position
-from utils import Color, PieceType, check_brc, check_brc_bool
+from alicechess.pieces import King, Pawn, Piece, Rook
+from alicechess.position import BoardPosition, Position
+from alicechess.utils import Color, PieceType, check_brc, check_brc_bool
 
 # =============================================================================
 

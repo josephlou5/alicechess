@@ -4,10 +4,10 @@ Player class.
 
 # =============================================================================
 
-import typing as _t
+from typing import Union
 
-import utils as _utils
-from position import Move as _Move
+from alicechess.position import Move
+from alicechess.utils import Color, PromoteType
 
 # =============================================================================
 
@@ -24,12 +24,12 @@ class _PlayerBase:
 
     is_human = False
 
-    def __init__(self, color: _utils.Color):
+    def __init__(self, color: Color):
         """Initializes a player."""
         self._color = color
 
     @property
-    def color(self) -> _utils.Color:
+    def color(self) -> Color:
         """The player color."""
         return self._color
 
@@ -48,7 +48,7 @@ class Player(_PlayerBase):
             Called when this player can promote a pawn.
     """
 
-    def make_move(self, game_state: "GameState") -> _Move:
+    def make_move(self, game_state: "GameState") -> Move:
         """Called when this player should make their next move.
 
         Args:
@@ -61,7 +61,7 @@ class Player(_PlayerBase):
             f"{self.__class__.__name__}: method `make_move()` not implemented"
         )
 
-    def promote(self, game_state: "GameState") -> _utils.PromoteType:
+    def promote(self, game_state: "GameState") -> PromoteType:
         """Called when this player can promote a pawn.
 
         The move being made is accessible through `game_state.move`.
@@ -85,4 +85,4 @@ class HumanPlayer(_PlayerBase):
 
 # =============================================================================
 
-AnyPlayer = _t.Union[Player, HumanPlayer]
+AnyPlayer = Union[Player, HumanPlayer]

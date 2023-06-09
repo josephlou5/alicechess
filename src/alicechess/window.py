@@ -21,10 +21,14 @@ Pillow must be installed to run a game in a window:
 """
     ) from ex
 
-from game_state import GameState
-from pieces import Piece
-from position import BoardPosition, Position
-from utils import Color, PieceType, PromoteType, check_brc_bool
+from alicechess.game_state import GameState
+from alicechess.pieces import Piece
+from alicechess.position import BoardPosition, Position
+from alicechess.utils import Color, PieceType, PromoteType, check_brc_bool
+
+# =============================================================================
+
+__all__ = ("Window",)
 
 # =============================================================================
 
@@ -63,7 +67,7 @@ LAST_MOVE_COLOR = "#" + "".join(f"{x:02x}" for x in (102, 255, 178))
 FONTS = ("SF Pro",)
 
 # Images
-PICTURE_FOLDER = Path("pictures")
+PICTURE_FOLDER = Path(__file__).parent / "pictures"
 PICTURE_EXT = ".png"
 
 # =============================================================================

@@ -7,10 +7,17 @@ Example random bots.
 import random
 from typing import Dict
 
-from game_state import GameState
-from player import Player
-from position import Move
-from utils import PieceType, PromoteType
+from alicechess.game_state import GameState
+from alicechess.player import Player
+from alicechess.position import Move
+from alicechess.utils import PieceType, PromoteType
+
+# =============================================================================
+
+__all__ = (
+    "RandomPlayer",
+    "PrioritizedRandomPlayer",
+)
 
 # =============================================================================
 

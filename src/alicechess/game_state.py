@@ -8,12 +8,12 @@ import math
 from itertools import count, zip_longest
 from typing import Dict, Iterable, Iterator, Optional, Self, Type
 
-import pieces
-from moves_calculator import BoardDict, MovesCalculator
-from pieces import Piece, make_promoted
-from player import AnyPlayer
-from position import Move, PieceMove, PieceMoved, Position
-from utils import Color, EndGameState, PieceType, PromoteType
+from alicechess import pieces
+from alicechess._moves_calculator import BoardDict, MovesCalculator
+from alicechess.pieces import Piece, make_promoted
+from alicechess.player import AnyPlayer
+from alicechess.position import Move, PieceMove, PieceMoved, Position
+from alicechess.utils import Color, EndGameState, PieceType, PromoteType
 
 # =============================================================================
 
