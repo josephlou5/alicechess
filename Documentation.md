@@ -1,7 +1,5 @@
 # Alice Chess API Documentation
 
-## Advanced 
-
 ## `Player`
 
 Represents a player.
