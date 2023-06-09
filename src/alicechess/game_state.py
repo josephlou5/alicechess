@@ -5,6 +5,7 @@ GameState class.
 # =============================================================================
 
 import math
+from collections import Counter
 from itertools import count, zip_longest
 from typing import Dict, Iterable, Iterator, Optional, Self, Type
 
@@ -48,6 +49,8 @@ class GameState:  # pylint: disable=too-many-public-methods
         move (Optional[PieceMoved]): The move from the previous
             GameState, or None if this is the first state.
 
+        end_game_state (Optional[EndGameState]): The end game state.
+
         current_color (Color): The color of the current player.
         current_player (Player): The current player.
 
@@ -73,10 +76,8 @@ class GameState:  # pylint: disable=too-many-public-methods
             Returns the winner of the game (for checkmate).
         is_in_stalemate() -> bool
             Returns whether the current player is in stalemate.
-        is_kings_draw() -> bool
-            Returns whether the game is a draw by only having kings.
         is_draw() -> bool
-            Returns whether the game is a draw (by the fifty move rule).
+            Returns whether the game is a draw.
 
         is_in_check() -> bool
             Returns whether the current player is in check.
@@ -160,6 +161,11 @@ class GameState:  # pylint: disable=too-many-public-methods
 
         self._half_move_clock = half_move_clock
         self._num_moves = num_moves
+
+        if prev is None:
+            self._seen_positions = Counter()
+        else:
+            self._seen_positions = prev._seen_positions.copy()
 
         self._captured = tuple(captured)
 
@@ -284,6 +290,9 @@ class GameState:  # pylint: disable=too-many-public-methods
             _, r, c = en_passant_pawn.pos
             r -= en_passant_pawn.dr
             fen.append(Position(r, c).code)
+        # seen position (basically fen without the move counters)
+        board_position = tuple(fen)
+        self._seen_positions[board_position] += 1
         # half move clock
         fen.append(str(self._half_move_clock))
         # full move number
@@ -291,15 +300,22 @@ class GameState:  # pylint: disable=too-many-public-methods
         # combine
         self._fen = " ".join(fen)
 
+        self._is_in_check = False
+        # some draws could technically happen at the same time, so this
+        # order is arbitrary
         if len(self._board) == 2:
             # only two kings are left
-            self._is_in_check = False
-            self._end_game_state = EndGameState.ONLY_KINGS_DRAW
+            # there could be more cases for this, but not sure what they
+            # are for alice chess
+            self._end_game_state = EndGameState.INSUFFICIENT_MATERIAL_DRAW
             return
         if self._half_move_clock >= 100:
             # 50 move rule
-            self._is_in_check = False
             self._end_game_state = EndGameState.FIFTY_MOVE_DRAW
+            return
+        if self._seen_positions[board_position] >= 3:
+            # threefold repetition rule
+            self._end_game_state = EndGameState.THREEFOLD_REPETITION_DRAW
             return
 
         # calculate all the possible moves
@@ -323,12 +339,12 @@ class GameState:  # pylint: disable=too-many-public-methods
         print("=" * 50)
         print(self.fen())
         print(self.board_to_str())
-        print(self.moves_to_str())
         if self.is_game_over():
             print("end game state:", self._end_game_state)
             if self.is_in_checkmate():
                 print("winner:", self.winner())
         else:
+            print(self.moves_to_str())
             print("in check:", self.is_in_check())
 
     @classmethod
@@ -580,6 +596,11 @@ class GameState:  # pylint: disable=too-many-public-methods
         return self._move
 
     @property
+    def end_game_state(self) -> Optional[EndGameState]:
+        """The end game state."""
+        return self._end_game_state
+
+    @property
     def current_color(self) -> Color:
         """The color of the current player."""
         return self._current_color
@@ -737,13 +758,11 @@ class GameState:  # pylint: disable=too-many-public-methods
         """Returns whether the current player is in stalemate."""
         return self._end_game_state is EndGameState.STALEMATE
 
-    def is_kings_draw(self) -> bool:
-        """Returns whether the game is a draw by only having kings."""
-        return self._end_game_state is EndGameState.ONLY_KINGS_DRAW
-
     def is_draw(self) -> bool:
-        """Returns whether the game is a draw (by the fifty move rule)."""
-        return self._end_game_state is EndGameState.FIFTY_MOVE_DRAW
+        """Returns whether the game is a draw."""
+        return (
+            self._end_game_state is not None and self._end_game_state.is_draw()
+        )
 
     def is_in_check(self) -> bool:
         """Returns whether the current player is in check."""

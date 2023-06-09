@@ -3,6 +3,7 @@
 ## v2.2.0
 
 - Added command-line parsing to allow launching a game between builtin players
+- Added threefold repetition rule
 
 ## v2.1.0
 

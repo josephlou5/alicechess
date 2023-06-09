@@ -735,10 +735,8 @@ class Window:
                 text = f"Checkmate. {game.winner().title()} won!"
             elif game.is_in_stalemate():
                 text = "Stalemate."
-            elif game.is_kings_draw():
-                text = "Draw."
             elif game.is_draw():
-                text = "Draw (50 moves rule)."
+                text = f"Draw ({game.end_game_state.human_readable()})."
             self._show(self._state_text, text=text)
             return
 

@@ -111,17 +111,18 @@ the end game state, and more.
 
 **Properties**
 
-| Name              | Type                           | Description                                                             |
-| ----------------- | ------------------------------ | ----------------------------------------------------------------------- |
-| `id`              | `int`                          | The game state id.                                                      |
-| `white`           | [`Player`][]                   | The white player.                                                       |
-| `black`           | [`Player`][]                   | The black player.                                                       |
-| `prev`            | `Optional[GameState]`          | The previous `GameState`.                                               |
-| `move`            | `Optional[`[`PieceMoved`][]`]` | The move from the previous `GameState`.                                 |
-| `current_color`   | [`Color`][]                    | The color of the current player.                                        |
-| `current_player`  | [`Player`][]                   | The current player.                                                     |
-| `half_move_clock` | `int`                          | The number of half-moves since the last capture or the last pawn moved. |
-| `num_moves`       | `int`                          | The number of full moves played in the entire game.                     |
+| Name              | Type                             | Description                                                             |
+| ----------------- | -------------------------------- | ----------------------------------------------------------------------- |
+| `id`              | `int`                            | The game state id.                                                      |
+| `white`           | [`Player`][]                     | The white player.                                                       |
+| `black`           | [`Player`][]                     | The black player.                                                       |
+| `prev`            | `Optional[GameState]`            | The previous `GameState`.                                               |
+| `move`            | `Optional[`[`PieceMoved`][]`]`   | The move from the previous `GameState`.                                 |
+| `end_game_state`  | `Optional[`[`EndGameState`][]`]` | The end game state.                                                     |
+| `current_color`   | [`Color`][]                      | The color of the current player.                                        |
+| `current_player`  | [`Player`][]                     | The current player.                                                     |
+| `half_move_clock` | `int`                            | The number of half-moves since the last capture or the last pawn moved. |
+| `num_moves`       | `int`                            | The number of full moves played in the entire game.                     |
 
 **Methods**
 
@@ -185,13 +186,9 @@ the end game state, and more.
 
   Returns whether the current player is in stalemate.
 
-- `is_kings_draw() -> bool`
-
-  Returns whether the game is a draw by only having kings.
-
 - `is_draw() -> bool`
 
-  Returns whether the game is a draw (by the fifty move rule).
+  Returns whether the game is a draw.
 
 - `is_in_check() -> bool`
 
@@ -665,8 +662,21 @@ Enum for the possible states for the end of the game.
 
 - `EndGameState.CHECKMATE`
 - `EndGameState.STALEMATE`
-- `EndGameState.ONLY_KINGS_DRAW`: A draw by only having kings left on the board.
+- `EndGameState.INSUFFICIENT_MATERIAL_DRAW`: A draw by having insufficient
+  material to end in a checkmate (such as only two kings).
 - `EndGameState.FIFTY_MOVE_DRAW`: A draw through the fifty move rule.
+- `EndGameState.THREEFOLD_REPETITION_DRAW`: A draw through the threefold
+  repetition rule.
+
+**Methods**
+
+- `human_readable() -> str`
+
+  Returns a human-readable name of this state.
+
+- `is_draw() -> bool`
+
+  Returns whether the current state is a type of draw.
 
 ### `HumanPlayer`
 

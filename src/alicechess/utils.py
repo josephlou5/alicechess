@@ -76,8 +76,21 @@ class EndGameState(_enum.Enum):
 
     CHECKMATE = _enum.auto()
     STALEMATE = _enum.auto()
-    ONLY_KINGS_DRAW = _enum.auto()
+    INSUFFICIENT_MATERIAL_DRAW = _enum.auto()
     FIFTY_MOVE_DRAW = _enum.auto()
+    THREEFOLD_REPETITION_DRAW = _enum.auto()
+
+    def human_readable(self) -> str:
+        """Returns a human-readable name of this state."""
+        return self.name.replace("_", " ").title()
+
+    def is_draw(self) -> bool:
+        """Returns whether the current state is a type of draw."""
+        return self in (
+            self.INSUFFICIENT_MATERIAL_DRAW,
+            self.FIFTY_MOVE_DRAW,
+            self.THREEFOLD_REPETITION_DRAW,
+        )
 
 
 # =============================================================================
