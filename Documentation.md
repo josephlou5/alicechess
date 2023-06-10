@@ -662,18 +662,6 @@ Enum for the possible promotion types.
 
   Returns the `PromoteType` at index `i` (in the order above).
 
-## Others
-
-### `MovesCalculator`
-
-This is a helper class to calculate the possible moves for a given board state.
-There was a lot of code involved (such as checking for special cases like
-castling and en passant), including additional helper methods, so it was cleaner
-to bring it out to another class instead of including all of it in the
-`GameState` constructor. However, this means that only a `MovesCalculator` needs
-to know the possible ways a piece can move, and individual [`Piece`][] objects
-are simply given their possible moves.
-
 ### `EndGameState`
 
 Enum for the possible states for the end of the game.
@@ -698,12 +686,24 @@ Enum for the possible states for the end of the game.
 
   Returns whether the current state is a type of draw.
 
+## Others
+
+### `MovesCalculator`
+
+This is a helper class to calculate the possible moves for a given board state.
+There was a lot of code involved (such as checking for special cases like
+castling and en passant), including additional helper methods, so it was cleaner
+to bring it out to another class instead of including all of it in the
+`GameState` constructor. However, this means that only a `MovesCalculator` needs
+to know the possible ways a piece can move, and individual [`Piece`][] objects
+are simply given their possible moves.
+
 ### `HumanPlayer`
 
 A `HumanPlayer` is a [`Player`][] that does not implement the `make_move()` and
 `promote()` methods, and instead relies on other means of input to make moves in
-the game. For instance, `HumanPlayer`s in a windowed game (see [`Game`][]) will
-use click events to select pieces and move them.
+the game. For instance, `HumanPlayer`s in a windowed game will use click events
+to select pieces and move them.
 
 You will only need to use this if you want a human to play in a game by passing
 `HumanPlayer` as the `white` or `black` player to a [`Game`][].
