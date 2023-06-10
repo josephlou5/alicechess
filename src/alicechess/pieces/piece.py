@@ -102,6 +102,23 @@ class Piece:
         args_str = ", ".join(f"{key}={val}" for key, val in args.items())
         return f"{self.__class__.__name__}({args_str})"
 
+    def __hash__(self):
+        return hash((self._type, self._color, self._pos))
+
+    def __eq__(self, other):
+        if not isinstance(other, Piece):
+            return False
+        if self is other:
+            return True
+        # represents pretty much the same piece on the board if these
+        # components are the same
+        return (
+            self.type is other.type
+            and self.color is other.color
+            and self.pos == other.pos
+            and self.is_captured is other.is_captured
+        )
+
     @property
     def id(self) -> int:
         """The piece id."""

@@ -7,7 +7,7 @@ GameState class.
 import math
 from collections import Counter
 from itertools import count, zip_longest
-from typing import Dict, Iterable, Iterator, Optional, Self, Type
+from typing import Dict, Iterable, Iterator, Optional, Self, Tuple, Type
 
 from alicechess import pieces
 from alicechess._moves_calculator import BoardDict, MovesCalculator
@@ -23,6 +23,10 @@ __all__ = ("GameState",)
 # =============================================================================
 
 _PRIVATE_game_state_constructor_key = object()
+
+# maps: board state (piece positions, castling rights, en passant
+#   target) -> moves calculator
+_cached_calculators: Dict[Tuple, MovesCalculator] = {}
 
 
 class GameState:  # pylint: disable=too-many-public-methods
@@ -320,10 +324,19 @@ class GameState:  # pylint: disable=too-many-public-methods
             self._end_game_state = EndGameState.THREEFOLD_REPETITION_DRAW
             return
 
-        # calculate all the possible moves
-        calculator = MovesCalculator(
-            self._board, self._kings, unmoved_rooks, en_passant_pawn
-        )
+        # combine piece positions, castling rights, en passant target
+        board_state = (fen[0], fen[2], fen[3])
+        if board_state in _cached_calculators:
+            # with the given board state (and castling rights and en
+            # passant target), the pieces should have the same moves
+            calculator = _cached_calculators[board_state]
+            calculator.assign_moves_to_pieces(self._board)
+        else:
+            # calculate all the possible moves
+            calculator = MovesCalculator(
+                self._board, self._kings, unmoved_rooks, en_passant_pawn
+            )
+            _cached_calculators[board_state] = calculator
 
         self._is_in_check = calculator.is_in_check(self._current_color)
 

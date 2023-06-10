@@ -1,5 +1,9 @@
 # Changelog
 
+## v2.3.1
+
+- Cached move calculation for repeating board states
+
 ## v2.3.0
 
 _2023-06-10 10:26_

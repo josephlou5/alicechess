@@ -193,9 +193,18 @@ class MovesCalculator:
             raise ValueError("Both kings are in check")
         self._num_moves = [0, 0]
 
+        # maps: pos -> possible moves
+        self._possible_moves = {}
+        # maps: pos -> kwargs
+        self._castles = {}
+        # maps: pos -> (column, threatened pawn id)
+        self._en_passant = {}
+
         # calculate all the possible moves
         for piece in self._board.values():
-            self._calc_possible(piece)
+            moves = self._calc_possible(piece)
+            self._possible_moves[piece.pos] = moves
+            self._num_moves[piece.color.value] += len(moves)
 
         # check for castling
         for king, in_check, rooks in zip(
@@ -252,7 +261,11 @@ class MovesCalculator:
                 ):
                     continue
                 # king moves two spaces
-                king._add_castle(rook_c=kc + dc, king_c=kc + dc + dc)
+                self._castles[king.pos] = {
+                    "rook_c": kc + dc,
+                    "king_c": kc + dc + dc,
+                }
+                self._num_moves[king.color.value] += 1
 
         # check for en passant
         if en_passant_pawn is not None:
@@ -279,16 +292,47 @@ class MovesCalculator:
                     pawn.pos, capture_pos, en_passant=(pr, pc)
                 ):
                     continue
-                pawn._add_en_passant(pc)
+                self._en_passant[pawn.pos] = (pc, en_passant_pawn.id)
+                self._num_moves[pawn.color.value] += 1
 
-        for piece in self._board.values():
-            piece._mark_threatened(False)
-            self._num_moves[piece.color.value] += piece.num_moves
-        for piece in self._board.values():
+        self.assign_moves_to_pieces(self._board)
+
+    def assign_moves_to_pieces(self, board: BoardDict):
+        """Assigns the calculated moves to the pieces in the given
+        board.
+
+        Assumes castling rights are the same as when the calculator was
+        originally created.
+        """
+        # pylint: disable=protected-access
+
+        # make sure both boards have the same pieces
+        if set(board.values()) != set(self._board.values()):
+            raise ValueError("Given board does not have the proper pieces")
+
+        threatened_piece_ids = set()
+        # assign moves to all the pieces
+        for piece in board.values():
+            piece._set_possible_moves(self._possible_moves[piece.pos])
+
+            # find threatened pieces
             for move in piece.yield_moves():
-                threatened_piece = self._get(*move.capture_pos)
+                threatened_piece = _get(board, *move.capture_pos)
                 if threatened_piece is not None:
-                    threatened_piece._mark_threatened(True)
+                    threatened_piece_ids.add(threatened_piece.id)
+
+            # add special moves
+            if piece.type is PieceType.KING:
+                if piece.id in self._castles:
+                    piece._add_castle(**self._castles[piece.id])
+            elif piece.type is PieceType.PAWN:
+                if piece.id in self._en_passant:
+                    c, threatened_pawn_id = self._en_passant[piece.id]
+                    piece._add_en_passant(c)
+                    threatened_piece_ids.add(threatened_pawn_id)
+        # mark all threatened pieces as threatened or not
+        for piece in board.values():
+            piece._mark_threatened(piece.id in threatened_piece_ids)
 
     def _get(self, bn: int, r: int, c: int) -> Optional[Piece]:
         return _get(self._board, bn, r, c)
@@ -370,7 +414,7 @@ class MovesCalculator:
 
         return False
 
-    def _calc_possible_pawn(self, piece: Pawn):
+    def _calc_possible_pawn(self, piece: Pawn) -> frozenset[Position]:
         bn, pr, pc = piece.pos
         moves = set()
 
@@ -391,7 +435,7 @@ class MovesCalculator:
 
         if not check_brc_bool(r=r):
             # row is out of bounds; the pawn is on the promotion rank
-            return moves
+            return frozenset()
 
         # forward
         c = pc
@@ -425,36 +469,35 @@ class MovesCalculator:
                 continue
             moves.add(Position(r, c))
 
-        return moves
+        return frozenset(moves)
 
-    def _calc_possible(self, piece: Piece):
+    def _calc_possible(self, piece: Piece) -> frozenset[Position]:
         if self._get(*piece.pos) is not piece:
             raise ValueError(
                 f"Piece {piece.name!r} is not at the proper position "
                 f"({piece.pos}) in the board"
             )
         if piece.type is PieceType.PAWN:
-            moves = self._calc_possible_pawn(piece)
-        else:
-            bn, pr, pc = piece.pos
-            moves = set()
-            pos_gen = POS_GEN_FUNCS[piece.type](pr, pc)
-            for r, c in pos_gen:
-                this_board = self._get(bn, r, c)
-                if this_board is not None:
-                    # done with this direction
-                    pos_gen.send(True)
-                    if this_board.type is PieceType.KING:
-                        # can't capture a king
-                        continue
-                    if this_board.color is piece.color:
-                        # can't capture your own piece
-                        continue
-                other_board = self._get(1 - bn, r, c)
-                if other_board is not None:
-                    # can't replace on other board
+            return self._calc_possible_pawn(piece)
+        bn, pr, pc = piece.pos
+        moves = set()
+        pos_gen = POS_GEN_FUNCS[piece.type](pr, pc)
+        for r, c in pos_gen:
+            this_board = self._get(bn, r, c)
+            if this_board is not None:
+                # done with this direction
+                pos_gen.send(True)
+                if this_board.type is PieceType.KING:
+                    # can't capture a king
                     continue
-                if self._move_in_check(piece.pos, (r, c)):
+                if this_board.color is piece.color:
+                    # can't capture your own piece
                     continue
-                moves.add(Position(r, c))
-        piece._set_possible_moves(moves)  # pylint: disable=protected-access
+            other_board = self._get(1 - bn, r, c)
+            if other_board is not None:
+                # can't replace on other board
+                continue
+            if self._move_in_check(piece.pos, (r, c)):
+                continue
+            moves.add(Position(r, c))
+        return frozenset(moves)
