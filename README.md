@@ -47,8 +47,10 @@ Notable game rules:
 
 ## How to play
 
-To start a game between two human players, you can easily just run the package
-on the command line:
+### Command Line
+
+To start a game between two human players, you can run the package on the
+command line:
 
 ```bash
 $ python -m alicechess
@@ -56,20 +58,24 @@ $ python -m alicechess
 
 A window will come up where the game can be played.
 
-## Playing against bots
+You can also change the players you want to play with by specifying any two of
+the builtin players (`HumanPlayer` or any of the bots defined in `bots.py`):
 
-To play a game against a bot or between bots, you must write your own script.
-You should initialize a `Game` object with the appropriate players, then call
-either the `start()` or `start_window()` method. To write your own bot, see the
-[Writing a bot](#writing-a-bot) section.
+```bash
+$ python -m alicechess HumanPlayer RandomPlayer
+```
+
+See `python -m alicechess --help` for a list of the possible players.
+
+### Script
+
+You can also use a script to run a game. You must initialize a `Game` object
+with the appropriate players, then call the `start_window()` or `start()`
+method.
 
 Here is an example:
 
 ```python
-"""
-Plays a game between a human and a bot that plays randomly.
-"""
-
 from alicechess import Game, HumanPlayer
 from alicechess.bots import RandomPlayer
 
@@ -82,13 +88,16 @@ Note that the class names (not instances) are passed to the `Game` constructor.
 The `start_window()` method will, as implied, start an interactive window where
 the game can be played. However, you can also opt to use the `start()` method
 instead, which will return the first `GameState` of the game, and then use
-another way to ask the user for input and play the game; for instance, you could
-make the game entirely textual with user input provided with the keyboard. See
-the [API Documentation][docs] for more information.
+another way to ask the user(s) for input and play the game; for instance, you
+could make the game entirely textual with user input provided with the keyboard.
+See the [API Documentation][docs] for more information on `GameState` objects,
+and check out [`window.py`][] for how the windowed game is handled.
 
 In the interactive window, there is a 3 second delay for non-human player moves,
 to simulate realism. This can be changed by passing a value for
 `non_human_player_delay` to the `start_window()` method.
+
+To play against your own bot, see the [Writing a bot](#writing-a-bot) section.
 
 It is also possible for two bots to play against each other.
 
@@ -103,13 +112,9 @@ then be passed into the `Game` constructor to start a game. See the
 Here is an example:
 
 ```python
-"""
-Plays a game between a human and a bot (that I wrote).
-"""
-
 from alicechess import Game, HumanPlayer, Player, PromoteType
 
-class Bot(Player):
+class MyBot(Player):
     """A very good bot that I wrote."""
 
     def make_move(self, game_state):
@@ -121,13 +126,14 @@ class Bot(Player):
         return PromoteType.QUEEN
 
 if __name__ == "__main__":
-    Game(white=HumanPlayer, black=Bot).start_window()
+    Game(white=HumanPlayer, black=MyBot).start_window()
 ```
-
-[docs]: https://github.com/josephlou5/alicechess/blob/main/Documentation.md
 
 ## Credit
 
 Thank you to Artyom Lisitsyn for inspiring me to pursue this project and to
 Trung Phan for being my chess consultant and answering all my questions on rules
 and technicalities.
+
+[docs]: https://github.com/josephlou5/alicechess/blob/main/Documentation.md
+[`window.py`]: https://github.com/josephlou5/alicechess/blob/main/src/alicechess/window.py

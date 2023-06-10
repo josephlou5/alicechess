@@ -5,6 +5,10 @@
 - Improved debug printing for windowed games (and added ability to toggle debug)
 - Added keyboard actions to the window
 
+## v2.2.1
+
+- Updated readme for new command-line arguments
+
 ## v2.2.0
 
 _2023-06-09 14:22_
