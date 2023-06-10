@@ -401,7 +401,7 @@ class GameState:  # pylint: disable=too-many-public-methods
             bn, r = divmod(i, 8)
             num_files = 0
             for c in rank:
-                # allow multiple digits in a row, just because i'm not
+                # allow multiple digits in a rank, just because i'm not
                 # gonna be super strict about this
                 if c.isdigit():
                     num_files += int(c)
@@ -799,7 +799,7 @@ class GameState:  # pylint: disable=too-many-public-methods
         """Promotes the promoting pawn.
 
         A pawn is able to be promoted if it was last moved into the last
-        row for its direction of movement.
+        rank for its direction of movement.
 
         Args:
             promote_type (PromoteType): The type to promote to.

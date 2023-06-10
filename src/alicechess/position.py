@@ -23,27 +23,27 @@ __all__ = (
 
 
 def _rc_code(r: int, c: int) -> str:
-    row_number = str(8 - r)
-    col_letter = "abcdefgh"[c]
-    return f"{col_letter}{row_number}"
+    rank = str(8 - r)
+    file = "abcdefgh"[c]
+    return f"{file}{rank}"
 
 
 def _rc_from_code(code: str) -> Tuple[int, int]:
     if len(code) != 2:
         raise ValueError("`code` must be length 2")
-    letter, number = code.lower()
-    if not number.isdigit():
-        raise ValueError(f"Invalid code: not a digit: {number!r}")
+    file, rank = code.lower()
+    if not rank.isdigit():
+        raise ValueError(f"Invalid code: rank must be a digit (got {rank!r})")
     try:
-        c = "abcdefgh".index(letter)
+        c = "abcdefgh".index(file)
     except ValueError:
         raise ValueError(
-            f"Invalid code: letter must be a-h (got {letter!r})"
+            f"Invalid code: file must be a-h (got {file!r})"
         ) from None
-    r = 8 - int(number)
+    r = 8 - int(rank)
     if not 0 <= r < 8:
         raise ValueError(
-            f"Invalid code: number must be within [1, 8] (got {number})"
+            f"Invalid code: rank must be within [1, 8] (got {rank})"
         )
     return r, c
 

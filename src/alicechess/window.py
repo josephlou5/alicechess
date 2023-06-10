@@ -338,11 +338,11 @@ class Window:
         under_y = HEIGHT - Y_OFFSET_BOT + LABEL_OFFSET
         for i in range(8):
             num, letter = label(i)
-            # row labels (numbers)
+            # rank labels
             y = under_y - SQUARE_SIZE * (i + 1)
             canvas.create_text(board1_x, y, text=num, font=font20)
             canvas.create_text(board2_end_x, y, text=num, font=font20)
-            # column labels (letters)
+            # file labels
             x1 = board1_x + SQUARE_SIZE * (i + 1)
             x2 = board2_x + SQUARE_SIZE * i
             canvas.create_text(x1, under_y, text=letter, font=font20)

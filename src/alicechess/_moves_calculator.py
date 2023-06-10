@@ -390,7 +390,7 @@ class MovesCalculator:
         r = pr + piece.dr
 
         if not check_brc_bool(r=r):
-            # row is out of bounds; the pawn is on the promotion row
+            # row is out of bounds; the pawn is on the promotion rank
             return moves
 
         # forward

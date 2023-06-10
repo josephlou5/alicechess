@@ -134,7 +134,7 @@ the end game state, and more.
 
   Returns the FEN representation of the game.
 
-  Since Alice Chess has two boards, the piece placement portion is doubled in
+  Since Alice Chess has two boards, the piece placement field is doubled in
   length, where the first 8 ranks refer to Board A (on the left) and the last 8
   ranks refer to Board B (on the right).
 
@@ -440,6 +440,13 @@ board number, row, and column `(bn, r, c)`. The following sections describe the
 actual objects [`Position`][] and [`BoardPosition`][] that are used throughout
 the code, but any methods that expect a `Position` or `BoardPosition` can also
 accept tuples representing the same.
+
+The board number is `0` or `1`, representing Board A (on the left) and Board B
+(on the right), respectively. The row and column are 0-indexed values in the
+range `[0, 7]`, counting from the top left of each board. This means that each
+file is numbered `0` to `7` (i.e., file a is `c = 0`, file b is `c = 1`, and so
+on), but each rank is numbered in reverse order (i.e., rank 1 is `r = 7`, rank 2
+is `r = 6`, and so on, with rank 8 being `r = 0`).
 
 #### `Position`
 
