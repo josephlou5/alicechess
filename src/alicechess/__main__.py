@@ -19,7 +19,7 @@ for bot_name in bots.__all__:
 
 _players_str = ("\n" + (" " * 4)).join(PLAYERS.keys())
 USAGE_FIRST_LINE = "Usage: python -m alicechess [WHITE] [BLACK]"
-USAGE = f"""\
+USAGE = f"""
 {USAGE_FIRST_LINE}
 
   {__doc__.strip()}
@@ -28,7 +28,7 @@ USAGE = f"""\
 
   Accepted players:
     {_players_str}
-"""
+""".strip()
 
 # ======================================================================
 
