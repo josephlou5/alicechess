@@ -7,6 +7,8 @@
 
 ## v2.2.1
 
+_2023-06-09 20:31_
+
 - Updated readme for new command-line arguments
 
 ## v2.2.0

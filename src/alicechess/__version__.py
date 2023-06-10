@@ -2,4 +2,5 @@
 Version for `alicechess` package.
 """
 
-__version__ = "2.2.0"
+version_tuple = (2, 2, 1)
+__version__ = ".".join(map(str, version_tuple))
