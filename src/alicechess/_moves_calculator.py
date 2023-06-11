@@ -163,6 +163,9 @@ class MovesCalculator:
     """Calculates the possible moves for a given board state.
 
     Methods:
+        assign_moves_to_pieces(board)
+            Assigns the calculated moves to the pieces in the given
+            board.
         num_moves(color) -> int
             Returns the number of moves for the given color.
         is_in_check(color) -> bool
