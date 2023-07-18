@@ -39,7 +39,7 @@ Represents a player.
 
 **Examples**
 
-See [`bots.py`](bots.py) for some example simple bots.
+See [`bots.py`](src/alicechess/bots.py) for some example simple bots.
 
 ## `Game`
 
@@ -335,7 +335,7 @@ Two special pieces, [`King`][] and [`Pawn`][], are described below.
 
   Returns a copy of this piece.
 
-  _Returns_ [`Piece`][]: The copy.
+  _Returns_ `Piece`: The copy.
 
 - `yield_moves() -> Iterator[PieceMove]`
 
@@ -375,13 +375,13 @@ Two special pieces, [`King`][] and [`Pawn`][], are described below.
   | ----- | ------------------- | ------------------------ |
   | `pos` | [`BoardPosition`][] | The position to move to. |
 
-  _Returns_ [`Piece`][]: The copy.
+  _Returns_ `Piece`: The copy.
 
 - `capture() -> Piece`
 
   Returns a copy of this piece that is captured.
 
-  _Returns_ [`Piece`][]: The copy.
+  _Returns_ `Piece`: The copy.
 
 ### `King`
 
@@ -665,7 +665,7 @@ Enum for the possible promotion types.
 
 **Static Methods**
 
-- `by_index(i) -> PromoteType`
+- `by_index(i: int) -> PromoteType`
 
   Returns the `PromoteType` at index `i` (in the order above).
 
@@ -701,9 +701,9 @@ This is a helper class to calculate the possible moves for a given board state.
 There was a lot of code involved (such as checking for special cases like
 castling and en passant), including additional helper methods, so it was cleaner
 to bring it out to another class instead of including all of it in the
-`GameState` constructor. However, this means that only a `MovesCalculator` needs
-to know the possible ways a piece can move, and individual [`Piece`][] objects
-are simply given their possible moves.
+[`GameState`][] constructor. However, this means that only a `MovesCalculator`
+needs to know the possible ways a piece can move, and individual [`Piece`][]
+objects are simply given their possible moves.
 
 ### `HumanPlayer`
 
