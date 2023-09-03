@@ -1,6 +1,17 @@
 # Changelog
 
-## v2.4.0
+## v2.5.0
+
+_2023-09-03 15:35_
+
+- Cached move calculation for repeating board states
+- Set required Python version to Python 3.11
+  - The code uses `typing.Self`, which was introduced in Python 3.11. For type
+    hint reasons, we will not remove it, and so the minimum required version
+    will have to be Python 3.11.
+  - Since this change broke v2.4.0, it has been yanked.
+
+## v2.4.0 (yanked)
 
 _2023-09-03 15:13_
 
