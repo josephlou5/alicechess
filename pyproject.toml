@@ -18,6 +18,9 @@ homepage = "https://github.com/josephlou5/alicechess"
 repository = "https://github.com/josephlou5/alicechess"
 classifiers = [
   "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.8",
   "License :: OSI Approved :: MIT License",
   "Topic :: Games/Entertainment :: Board Games",
   "Topic :: Software Development :: Libraries :: Python Modules",
@@ -26,7 +29,7 @@ classifiers = [
 packages = [{include = "alicechess", from = "src"}]
 
 [tool.poetry.dependencies]
-python = "^3.11"
+python = "^3.8"
 Pillow = "^9.5.0"
 
 [tool.poetry.group.dev.dependencies]
