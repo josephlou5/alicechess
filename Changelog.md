@@ -1,8 +1,11 @@
 # Changelog
 
-## v2.3.1
+## v2.4.0
+
+_2023-09-03 15:13_
 
 - Cached move calculation for repeating board states
+- Downgraded required Python version to Python 3.8 (was 3.11 before)
 
 ## v2.3.0
 
