@@ -4,7 +4,10 @@ Pawn piece.
 
 # =============================================================================
 
+from typing import Optional
+
 from alicechess.pieces.piece import Piece
+from alicechess.position import BoardPosition
 from alicechess.utils import Color, PieceType
 
 # =============================================================================
@@ -35,8 +38,9 @@ class Pawn(Piece):
             self._start_row = 1
             self._promote_row = 7
 
-    def _check_start_position(self) -> bool:
-        return self._pos.bn == 0 and self._pos.r == self._start_row
+    def is_at_start_pos(self, pos: Optional[BoardPosition] = None) -> bool:
+        bn, r, c = pos or self._pos
+        return bn == 0 and r == self._start_row
 
     @property
     def dr(self) -> int:

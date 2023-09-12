@@ -11,7 +11,11 @@ from itertools import count, zip_longest
 from typing import Dict, Iterable, Iterator, Optional, Self, Tuple, Type
 
 from alicechess import pieces
-from alicechess._moves_calculator import BoardDict, MovesCalculator
+from alicechess._moves_calculator import (
+    BoardDict,
+    CastlingAbilityTuple,
+    MovesCalculator,
+)
 from alicechess.pieces import Piece, make_promoted
 from alicechess.player import AnyPlayer
 from alicechess.position import Move, PieceMove, PieceMoved, Position
@@ -131,6 +135,7 @@ class GameState:  # pylint: disable=too-many-public-methods
         prev: Optional[Self],
         move: Optional[Move],
         piece_captured: Optional[Piece],
+        castling_ability: CastlingAbilityTuple,
         en_passant_pawn: Optional[Piece],
         half_move_clock: int,
         num_moves: int,
@@ -180,7 +185,7 @@ class GameState:  # pylint: disable=too-many-public-methods
         self._board: BoardDict = {}
         self._kings = [None, None]
         seen_piece_ids = set()
-        unmoved_rooks = ([], [])
+        unmoved_rooks = ([None, None], [None, None])
         for piece in board.values():
             if piece.id in seen_piece_ids:
                 raise ValueError(f"Multiple pieces with id: {piece.id}")
@@ -191,8 +196,15 @@ class GameState:  # pylint: disable=too-many-public-methods
             if piece.type is PieceType.KING:
                 self._kings[piece.color.value] = piece
             elif piece.type is PieceType.ROOK:
-                if not piece.has_moved:
-                    unmoved_rooks[piece.color.value].append(piece)
+                if piece.is_at_start_pos():
+                    index = None
+                    if piece.pos.c == 0:
+                        # queenside rook
+                        index = 1
+                    else:
+                        # kingside rook
+                        index = 0
+                    unmoved_rooks[piece.color.value][index] = piece
 
         # validate last move
         piece_moved = None
@@ -232,6 +244,17 @@ class GameState:  # pylint: disable=too-many-public-methods
         if abs(r0 - r1) <= 1 and abs(c0 - c1) <= 1:
             raise ValueError("Kings are next to each other")
 
+        # validate castling ability (rooks must exist)
+        self._castling_ability = []
+        for color in (Color.WHITE, Color.BLACK):
+            color_can_castle = []
+            for can_castle, rook in zip(
+                castling_ability[color.value], unmoved_rooks[color.value]
+            ):
+                color_can_castle.append(can_castle and rook is not None)
+            self._castling_ability.append(tuple(color_can_castle))
+        self._castling_ability = tuple(self._castling_ability)
+
         self._id = next(self.__game_state_counter)
 
         # compute fen representation
@@ -268,24 +291,11 @@ class GameState:  # pylint: disable=too-many-public-methods
         # castling rights
         castling = []
         for color in (Color.WHITE, Color.BLACK):
-            king = self._kings[color.value]
-            if king.has_moved:
-                continue
-            kc = king.pos.c
-            kingside = False
-            queenside = False
-            for rook in unmoved_rooks[color.value]:
-                rc = rook.pos.c
-                if rc < kc:  # left rook: queenside
-                    queenside = True
-                else:  # right rook: kingside
-                    kingside = True
-            if kingside:
-                # kingside
-                castling.append(color_case(color, "K"))
-            if queenside:
-                # queenside
-                castling.append(color_case(color, "Q"))
+            for can_castle, letter in zip(
+                self._castling_ability[color.value], "KQ"
+            ):
+                if can_castle:
+                    castling.append(color_case(color, letter))
         if len(castling) == 0:
             fen.append("-")
         else:
@@ -331,13 +341,17 @@ class GameState:  # pylint: disable=too-many-public-methods
             # with the given board state (and castling rights and en
             # passant target), the pieces should have the same moves
             calculator = _cached_calculators[board_state]
-            calculator.assign_moves_to_pieces(self._board)
         else:
             # calculate all the possible moves
             calculator = MovesCalculator(
-                self._board, self._kings, unmoved_rooks, en_passant_pawn
+                self._board,
+                self._kings,
+                unmoved_rooks,
+                self._castling_ability,
+                en_passant_pawn,
             )
             _cached_calculators[board_state] = calculator
+        calculator.assign_moves_to_pieces(self._board)
 
         self._is_in_check = calculator.is_in_check(self._current_color)
 
@@ -359,7 +373,7 @@ class GameState:  # pylint: disable=too-many-public-methods
             "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR/8/8/8/8/8/8/8/8",
             # white goes first
             "w",
-            # all pieces can castle
+            # both colors can castle
             "KQkq",
             # no en passant
             "-",
@@ -392,6 +406,9 @@ class GameState:  # pylint: disable=too-many-public-methods
             full_move_number_str,
         ) = fen_parts
 
+        def color_from_case(c):
+            return Color.WHITE if c.isupper() else Color.BLACK
+
         # get pieces
         placements = placements_str.split("/")
         if len(placements) != 16:
@@ -409,29 +426,22 @@ class GameState:  # pylint: disable=too-many-public-methods
         }
         piece_id = count()
         board: BoardDict = {}
-        kings = [None, None]
-        rooks = ([], [])
         for i, rank in enumerate(placements):
             bn, r = divmod(i, 8)
             num_files = 0
             for c in rank:
-                # allow multiple digits in a rank, just because i'm not
-                # gonna be super strict about this
+                # allow multiple consecutive digits in a rank, just
+                # because i'm not gonna be super strict about this
                 if c.isdigit():
                     num_files += int(c)
                     continue
                 piece_cls = PIECE_CLASSES.get(c.upper(), None)
                 if piece_cls is None:
                     raise ValueError(f"Rank {i}: invalid piece symbol: {c!r}")
-                color = Color.WHITE if c.isupper() else Color.BLACK
+                color = color_from_case(c)
                 piece = piece_cls(next(piece_id), color, (bn, r, num_files))
                 board[piece.pos] = piece
                 num_files += 1
-
-                if piece.type is PieceType.KING:
-                    kings[color.value] = piece
-                elif piece.type is PieceType.ROOK:
-                    rooks[color.value].append(piece)
             if num_files < 8:
                 raise ValueError(f"Rank {i} has less than 8 files: {rank}")
             elif num_files > 8:
@@ -446,52 +456,22 @@ class GameState:  # pylint: disable=too-many-public-methods
             raise ValueError(f"Invalid active color symbol: {active_color!r}")
 
         # castling rights
-        can_castle = ([False, False], [False, False])
+        castling_ability = ([False, False], [False, False])
         if castling_rights == "-":
             # nobody can castle
             pass
         else:
             for c in castling_rights:
-                color = Color.WHITE if c.isupper() else Color.BLACK
                 if c.upper() == "K":
                     # kingside castle
-                    index = 1
+                    index = 0
                 elif c.upper() == "Q":
                     # queenside castle
-                    index = 0
+                    index = 1
                 else:
                     raise ValueError(f"Invalid castling symbol: {c!r}")
-                can_castle[color.value][index] = True
-        for color in Color:
-            # pylint: disable=protected-access
-            ability = can_castle[color.value]
-            if ability == [True, True]:
-                # can castle on both sides, so leave the pieces
-                # untouched
-                continue
-            king = kings[color.value]
-            if king is None:
-                # ignore; the error will come up later
-                continue
-            if ability == [False, False]:
-                # can't castle on either side, so just say the king
-                # moved
-                king._set_moved()
-                continue
-            kc = king.pos.c
-            for rook in rooks[color.value]:
-                if rook.has_moved:
-                    # not in an initial position, so just say it moved
-                    rook._set_moved()
-                    continue
-                rc = rook.pos.c
-                if rc < kc:  # left rook: queenside
-                    index = 0
-                else:  # right rook:
-                    index = 1
-                if not ability[index]:
-                    # can't castle this way
-                    rook._set_moved()
+                color = color_from_case(c)
+                castling_ability[color.value][index] = True
 
         # get en passant pawn
         if en_passant_target == "-":
@@ -561,6 +541,7 @@ class GameState:  # pylint: disable=too-many-public-methods
             prev=None,
             move=None,
             piece_captured=None,
+            castling_ability=castling_ability,
             en_passant_pawn=en_passant_pawn,
             half_move_clock=half_move_clock,
             num_moves=num_moves,
@@ -850,6 +831,7 @@ class GameState:  # pylint: disable=too-many-public-methods
             # use the same move from previous
             move=(self._move.pos, self._move.target),
             piece_captured=self._move.piece_captured,
+            castling_ability=self._castling_ability,
             # this pawn was promoting, so there is no en passant pawn
             en_passant_pawn=None,
             half_move_clock=self._half_move_clock,
@@ -924,6 +906,7 @@ class GameState:  # pylint: disable=too-many-public-methods
         """
         move = Move.of(move)
         (bn, r, c), (tr, tc) = move
+        curr_color = self._current_color.value
 
         if self.is_game_over():
             raise RuntimeError("Game is over")
@@ -952,6 +935,8 @@ class GameState:  # pylint: disable=too-many-public-methods
         board = {pos: piece.copy() for pos, piece in self._board.items()}
         captured = list(self._captured)
 
+        # make the copy of the castling ability mutable
+        castling_ability = list(map(list, self._castling_ability))
         half_move_clock = self._half_move_clock + 1
 
         # make move
@@ -987,31 +972,43 @@ class GameState:  # pylint: disable=too-many-public-methods
 
         # check for castle
         if piece.type is PieceType.KING:
-            if not piece.has_moved and r == tr and abs(c - tc) == 2:
+            # king moved, so this color can no longer castle
+            castling_ability[curr_color] = (False, False)
+            if piece.is_at_start_pos() and abs(c - tc) == 2:
                 # king is castling
                 if tc < c:
-                    if not piece.can_castle_left:
-                        raise ValueError("King cannot castle")
-                    # castling to the left (queenside)
+                    # queenside castle
                     rook_old_c = 0
-                    rook_new_c = piece.left_rook_col
+                    rook_new_c = c - 1
                 else:  # tc > c
-                    if not piece.can_castle_right:
-                        raise ValueError("King cannot castle")
-                    # castling to the right (kingside)
+                    # kingside castle
                     rook_old_c = 7
-                    rook_new_c = piece.right_rook_col
+                    rook_new_c = c + 1
                 # move rook to new board between old and new positions
                 # of king
                 rook_old_pos = (bn, tr, rook_old_c)
                 rook_new_pos = (1 - bn, tr, rook_new_c)
-                board[rook_new_pos] = board.pop(rook_old_pos).move_to(
-                    rook_new_pos
-                )
+                rook = board.pop(rook_old_pos, None)
+                if rook is None:
+                    raise ValueError("King castling with non-existent rook")
+                board[rook_new_pos] = rook.move_to(rook_new_pos)
+        if piece.type is PieceType.ROOK:
+            # rook moved, so this color can no longer castle on this
+            # side
+            if piece.is_at_start_pos():
+                index = None
+                if c == 0:
+                    # queenside rook moved
+                    index = 1
+                elif c == 7:
+                    # kingside rook moved
+                    index = 0
+                if index is not None:
+                    castling_ability[curr_color][index] = False
 
         # check for en passant
         en_passant_pawn = None
-        if piece.type is PieceType.PAWN and not piece.has_moved:
+        if piece.type is PieceType.PAWN and piece.is_at_start_pos():
             if bn == 0 and abs(r - tr) == 2 and c == tc:
                 # pawn advanced two steps
                 en_passant_pawn = moved_piece
@@ -1030,6 +1027,7 @@ class GameState:  # pylint: disable=too-many-public-methods
             prev=self,
             move=move,
             piece_captured=piece_captured,
+            castling_ability=castling_ability,
             en_passant_pawn=en_passant_pawn,
             half_move_clock=half_move_clock,
             num_moves=num_moves,

@@ -25,7 +25,6 @@ class Piece:
         fen_name (str): The piece FEN name.
         type (PieceType): The piece type.
         color (Color): The piece color.
-        has_moved (bool): Whether this piece has moved.
         pos (BoardPosition): The piece position.
         num_moves (int): The number of possible moves.
         is_captured (bool): Whether this piece is captured.
@@ -33,7 +32,11 @@ class Piece:
             the current board. False if not known.
 
     Methods:
-        copy() -> Piece:
+        is_at_start_pos(pos = None) -> bool
+            Returns whether the given position could be a start position
+            of the piece.
+
+        copy() -> Piece
             Returns a copy of this piece.
 
         yield_moves() -> Iterator[PieceMove]
@@ -56,7 +59,6 @@ class Piece:
         color: Color,
         pos: Optional[BoardPosition] = None,
         captured: bool = False,
-        has_moved: bool = False,
     ):
         if self._type is None:
             raise RuntimeError(
@@ -75,7 +77,6 @@ class Piece:
             self._fen_name = self._fen_name.lower()
 
         self._pos = BoardPosition.of(pos)
-        self._has_moved = has_moved
         self._is_captured = captured
         self._is_threatened = False
 
@@ -144,20 +145,6 @@ class Piece:
         """The piece color."""
         return self._color
 
-    def _check_start_position(self) -> bool:
-        """Checks if the current piece position could be a start
-        position of the piece.
-        """
-        raise NotImplementedError()
-
-    @property
-    def has_moved(self) -> bool:
-        """Whether this piece has moved."""
-        if self._has_moved:
-            return True
-        # also check if this piece is in one of its starting positions
-        return not self._check_start_position()
-
     @property
     def pos(self) -> BoardPosition:
         """The piece position."""
@@ -181,6 +168,12 @@ class Piece:
         """
         return self._is_threatened
 
+    def is_at_start_pos(self, pos: Optional[BoardPosition] = None) -> bool:
+        """Returns whether the given position could be a start position
+        of the piece.
+        """
+        raise NotImplementedError()
+
     def copy(self) -> "Piece":
         """Returns a copy of this piece."""
         return self.__class__(
@@ -188,7 +181,6 @@ class Piece:
             self._color,
             self._pos,
             self._is_captured,
-            self._has_moved,
         )
 
     def _set_possible_moves(self, moves: Set[Position]):
@@ -219,10 +211,6 @@ class Piece:
         if self._is_captured:
             raise RuntimeError("Cannot mark threatened for a captured piece")
         self._is_threatened = is_threatened
-
-    def _set_moved(self):
-        """Sets this piece as having moved."""
-        self._has_moved = True
 
     def _get_moves(self):
         if self._is_captured:
@@ -262,18 +250,14 @@ class Piece:
     def move_to(self, pos: BoardPosition) -> "Piece":
         """Returns a copy of this piece that is moved to the given
         position.
-
-        Also changes `has_moved` to True.
         """
         if self._is_captured:
             raise RuntimeError("Cannot move a captured piece")
         # can't be captured, so leave it as false
-        return self.__class__(self._id, self._color, pos, has_moved=True)
+        return self.__class__(self._id, self._color, pos)
 
     def capture(self) -> "Piece":
         """Returns a copy of this piece that is captured."""
         if self._is_captured:
             return self
-        return self.__class__(
-            self._id, self._color, captured=True, has_moved=self._has_moved
-        )
+        return self.__class__(self._id, self._color, captured=True)

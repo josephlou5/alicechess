@@ -1,5 +1,17 @@
 # Changelog
 
+## v3.0.0
+
+- Fixed bug where castles and en passants were not registering
+  - The special moves were being saved according to the position of the piece,
+    but were being accessed according to the id of the piece.
+- Moved castling ability logic to `GameState` rather than per-piece (#1)
+  - The ability of the FEN string to exactly regenerate a board state implies
+    that the castling ability for a color should be saved at the game level, not
+    the piece level.
+  - This change also replaced the `has_moved` property of `Piece` with the
+    `is_at_start_pos()` method.
+
 ## v2.5.0
 
 _2023-09-03 15:35_

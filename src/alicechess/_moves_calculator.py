@@ -5,7 +5,7 @@ MovesCalculator class.
 # =============================================================================
 
 from functools import partial
-from typing import Dict, Iterator, List, Optional, Sequence, Tuple
+from typing import Dict, Iterator, List, Optional, Tuple
 
 from alicechess.pieces import King, Pawn, Piece, Rook
 from alicechess.position import BoardPosition, Position
@@ -14,6 +14,10 @@ from alicechess.utils import Color, PieceType, check_brc, check_brc_bool
 # =============================================================================
 
 BoardDict = Dict[BoardPosition, Piece]
+
+# Whether white can castle (kingside and queenside) and whether black
+# can castle (kingside and queenside).
+CastlingAbilityTuple = Tuple[Tuple[bool, bool], Tuple[bool, bool]]
 
 # =============================================================================
 
@@ -176,12 +180,15 @@ class MovesCalculator:
         self,
         board: BoardDict,
         kings: Tuple[King],
-        unmoved_rooks: Tuple[Sequence[Rook]],
+        rooks: Tuple[
+            Tuple[Optional[Rook], Optional[Rook]],
+            Tuple[Optional[Rook], Optional[Rook]],
+        ],
+        castling_ability: CastlingAbilityTuple,
         en_passant_pawn: Optional[Pawn] = None,
     ):
         self._board = board
         self._kings = tuple(kings)
-        unmoved_rooks = tuple(map(tuple, unmoved_rooks))
 
         pawns: Tuple[List[Pawn]] = ([], [])
         for piece in self._board.values():
@@ -198,9 +205,9 @@ class MovesCalculator:
 
         # maps: pos -> possible moves
         self._possible_moves = {}
-        # maps: pos -> kwargs
+        # maps: king id -> column the king moves to
         self._castles = {}
-        # maps: pos -> (column, threatened pawn id)
+        # maps: pawn id -> (column, threatened pawn id)
         self._en_passant = {}
 
         # calculate all the possible moves
@@ -210,65 +217,22 @@ class MovesCalculator:
             self._num_moves[piece.color.value] += len(moves)
 
         # check for castling
-        for king, in_check, rooks in zip(
-            self._kings, self._in_check, unmoved_rooks
-        ):
-            if king.has_moved:
-                continue
+        for (
+            king,
+            in_check,
+            (kingside_rook, queenside_rook),
+            (can_castle_kingside, can_castle_queenside),
+        ) in zip(self._kings, self._in_check, rooks, castling_ability):
             if in_check:
                 continue
-            if len(rooks) == 0:
+            if not king.is_at_start_pos():
                 continue
-            enemy_color = king.color.other()
-            bn, kr, kc = king.pos
-            for rook in rooks:
-                rc = rook.pos.c
-                if rc < kc:
-                    # left rook: king will move to the left
-                    dc = -1
-                else:  # kc < rc
-                    # right rook: king will move to the right
-                    dc = 1
-                valid_castle = True
-                # check that the spaces in the middle are empty
-                c = kc + dc
-                while c != rc:
-                    if (bn, kr, c) in self._board:
-                        # there's a piece there on this board
-                        valid_castle = False
-                        break
-                    if abs(c - kc) <= 2:
-                        # the spaces being landed on must be empty on
-                        # the other board as well
-                        if (1 - bn, kr, c) in self._board:
-                            valid_castle = False
-                            break
-                    c += dc
-                if not valid_castle:
-                    continue
-                # check that the spaces the king moves through are not
-                # threatened on this board
-                c = kc
-                for _ in range(2):
-                    c += dc
-                    if _is_threatened(self._board, enemy_color, bn, kr, c):
-                        valid_castle = False
-                        break
-                if not valid_castle:
-                    continue
-                # check that the king does not teleport into check on
-                # the other board
-                king_c = kc + dc + dc
-                if _is_threatened(
-                    self._board, enemy_color, 1 - bn, kr, king_c
-                ):
-                    continue
-                # king moves two spaces
-                self._castles[king.pos] = {
-                    "rook_c": kc + dc,
-                    "king_c": kc + dc + dc,
-                }
-                self._num_moves[king.color.value] += 1
+            self._calc_possible_castle(
+                king, kingside_rook, can_castle_kingside, is_queenside=False
+            )
+            self._calc_possible_castle(
+                king, queenside_rook, can_castle_queenside, is_queenside=True
+            )
 
         # check for en passant
         if en_passant_pawn is not None:
@@ -295,10 +259,8 @@ class MovesCalculator:
                     pawn.pos, capture_pos, en_passant=(pr, pc)
                 ):
                     continue
-                self._en_passant[pawn.pos] = (pc, en_passant_pawn.id)
+                self._en_passant[pawn.id] = (pc, en_passant_pawn.id)
                 self._num_moves[pawn.color.value] += 1
-
-        self.assign_moves_to_pieces(self._board)
 
     def assign_moves_to_pieces(self, board: BoardDict):
         """Assigns the calculated moves to the pieces in the given
@@ -327,7 +289,7 @@ class MovesCalculator:
             # add special moves
             if piece.type is PieceType.KING:
                 if piece.id in self._castles:
-                    piece._add_castle(**self._castles[piece.id])
+                    piece._add_castle(self._castles[piece.id])
             elif piece.type is PieceType.PAWN:
                 if piece.id in self._en_passant:
                     c, threatened_pawn_id = self._en_passant[piece.id]
@@ -443,7 +405,7 @@ class MovesCalculator:
         # forward
         c = pc
         check_pos(r, c)
-        if not piece.has_moved and self._get(bn, r, c) is None:
+        if piece.is_at_start_pos() and self._get(bn, r, c) is None:
             # check double forward
             check_pos(r + piece.dr, c)
 
@@ -504,3 +466,56 @@ class MovesCalculator:
                 continue
             moves.add(Position(r, c))
         return frozenset(moves)
+
+    def _calc_possible_castle(
+        self,
+        king: King,
+        rook: Optional[Rook],
+        can_castle: bool,
+        is_queenside: bool,
+    ):
+        if rook is None:
+            return
+        if not can_castle:
+            return
+
+        enemy_color = king.color.other()
+        bn, kr, kc = king.pos
+        rc = rook.pos.c
+
+        if is_queenside:
+            # king will move to the left
+            dc = -1
+        else:
+            # king will move to the right
+            dc = 1
+
+        # check that all the spaces in the middle are empty
+        c = kc + dc
+        while c != rc:
+            if (bn, kr, c) in self._board:
+                # there's a piece there on this board
+                return
+            if abs(c - kc) <= 2:
+                # the spaces being landed on must be empty on the other
+                # board as well
+                if (1 - bn, kr, c) in self._board:
+                    return
+            c += dc
+        # check that the spaces the king moves through are not
+        # threatened on this board
+        c = kc
+        for _ in range(2):
+            c += dc
+            if _is_threatened(self._board, enemy_color, bn, kr, c):
+                return
+        # check that the king does not teleport into check on the other
+        # board
+        # king should move two spaces
+        king_c = kc + dc + dc
+        if _is_threatened(self._board, enemy_color, 1 - bn, kr, king_c):
+            return
+
+        # add castle move
+        self._castles[king.id] = king_c
+        self._num_moves[king.color.value] += 1

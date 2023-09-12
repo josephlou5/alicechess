@@ -313,7 +313,7 @@ the end game state, and more.
 
 Represents a piece.
 
-Two special pieces, [`King`][] and [`Pawn`][], are described below.
+The special piece [`Pawn`][] is described below.
 
 **Properties**
 
@@ -323,13 +323,19 @@ Two special pieces, [`King`][] and [`Pawn`][], are described below.
 | `name`          | `str`               | The piece name.                                                                    |
 | `type`          | [`PieceType`][]     | The piece type.                                                                    |
 | `color`         | [`Color`][]         | The piece color.                                                                   |
-| `has_moved`     | `bool`              | Whether this piece has moved.                                                      |
 | `pos`           | [`BoardPosition`][] | The piece position.                                                                |
 | `num_moves`     | `int`               | The number of possible moves.                                                      |
 | `is_captured`   | `bool`              | Whether this piece is captured.                                                    |
 | `is_threatened` | `bool`              | Whether this piece is being threatened on the current board. `False` if not known. |
 
 **Methods**
+
+- `is_at_start_pos(pos = None) -> bool`
+
+  Returns whether the given position could be a start position of the piece.
+
+  _Returns_ `bool`: Whether the given position could be a start position of the\
+  piece.
 
 - `copy() -> Piece`
 
@@ -367,8 +373,6 @@ Two special pieces, [`King`][] and [`Pawn`][], are described below.
 
   Returns a copy of this piece that is moved to the given position.
 
-  Also changes `has_moved` to `True`.
-
   _Arguments:_
 
   | Name  | Type                | Description              |
@@ -382,19 +386,6 @@ Two special pieces, [`King`][] and [`Pawn`][], are described below.
   Returns a copy of this piece that is captured.
 
   _Returns_ `Piece`: The copy.
-
-### `King`
-
-_Subclass of [`Piece`][]._
-
-**Additional Properties**
-
-| Name               | Type            | Description                                                           |
-| ------------------ | --------------- | --------------------------------------------------------------------- |
-| `can_castle_left`  | `bool`          | Whether the king can castle to the left (queenside).                  |
-| `left_rook_col`    | `Optional[int]` | The column the left rook castles to, if the king can castle with it.  |
-| `can_castle_right` | `bool`          | Whether the king can castle to the right (kingside).                  |
-| `right_rook_col`   | `Optional[int]` | The column the right rook castles to, if the king can castle with it. |
 
 ### `Pawn`
 
@@ -768,7 +759,6 @@ Windows systems.
 [`EndGameState`]: #endgamestate
 [`Game`]: #game
 [`GameState`]: #gamestate
-[`King`]: #king
 [`Move`]: #move
 [`Pawn`]: #pawn
 [`Piece`]: #piece
