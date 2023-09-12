@@ -43,7 +43,7 @@ class PrioritizedRandomPlayer(Player):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        # maps: int -> promote type
+        # maps: game state id -> promote type
         self._saved_promotions: Dict[int, PromoteType] = {}
 
     def make_move(self, game_state: GameState) -> Move:
