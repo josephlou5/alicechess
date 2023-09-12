@@ -2,6 +2,8 @@
 
 ## v3.0.0
 
+_2023-09-11 23:36_
+
 - Fixed bug where castles and en passants were not registering
   - The special moves were being saved according to the position of the piece,
     but were being accessed according to the id of the piece.
